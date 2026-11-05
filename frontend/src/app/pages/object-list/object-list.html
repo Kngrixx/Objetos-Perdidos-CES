@@ -1,0 +1,155 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Objetos</h1>
+      <p class="muted">
+        @if (isConsulta) {
+          Inventario de objetos disponibles (vista de consulta, sin datos personales).
+        } @else {
+          Busque por código, tipo, categoría, sede, bloque, estado o rango de fechas.
+        }
+      </p>
+    </div>
+    @if (canReceive) {
+      <a class="btn btn-primary" routerLink="/objetos/nuevo">+ Registrar objeto</a>
+    }
+  </div>
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="f-text">Texto</label>
+        <input id="f-text" name="text" [(ngModel)]="filters.text" placeholder="Código, tipo o descripción" />
+      </div>
+      <div class="field">
+        <label for="f-code">Código</label>
+        <input id="f-code" name="code" [(ngModel)]="filters.code" placeholder="OBJ-000001" />
+      </div>
+      <div class="field">
+        <label for="f-campus">Sede</label>
+        <select id="f-campus" name="campus" [(ngModel)]="filters.campus_id" (ngModelChange)="onCampusChange()">
+          <option [ngValue]="null">Todas</option>
+          @for (campus of campuses(); track campus.id) {
+            <option [ngValue]="campus.id">{{ campus.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-block">Bloque</label>
+        <select id="f-block" name="block" [(ngModel)]="filters.block_id" [disabled]="!filters.campus_id">
+          <option [ngValue]="null">Todos</option>
+          @for (block of blocks(); track block.id) {
+            <option [ngValue]="block.id">{{ block.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-category">Categoría</label>
+        <select id="f-category" name="category" [(ngModel)]="filters.category_id" (ngModelChange)="onCategoryChange()">
+          <option [ngValue]="null">Todas</option>
+          @for (category of categories(); track category.id) {
+            <option [ngValue]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-type">Tipo</label>
+        <select id="f-type" name="type" [(ngModel)]="filters.object_type_id" [disabled]="!filters.category_id">
+          <option [ngValue]="null">Todos</option>
+          @for (type of types(); track type.id) {
+            <option [ngValue]="type.id">{{ type.name }}</option>
+          }
+        </select>
+      </div>
+      @if (!isConsulta) {
+        <div class="field">
+          <label for="f-status">Estado</label>
+          <select id="f-status" name="status" [(ngModel)]="filters.status">
+            <option value="">Todos</option>
+            <option value="DISPONIBLE">DISPONIBLE</option>
+            <option value="DEVUELTO">DEVUELTO</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-active">Registro</label>
+          <select id="f-active" name="active" [(ngModel)]="filters.is_active">
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+      }
+      <div class="field">
+        <label for="f-from">Recibido desde</label>
+        <input id="f-from" type="date" name="from" [(ngModel)]="filters.date_from" />
+      </div>
+      <div class="field">
+        <label for="f-to">Hasta (inclusive)</label>
+        <input id="f-to" type="date" name="to" [(ngModel)]="filters.date_to" />
+      </div>
+    </div>
+    <div class="actions" style="margin-top: 12px">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">Buscar</button>
+      <button class="btn btn-outline" type="button" (click)="clear()">Limpiar filtros</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0 && !error()) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              @if (!isConsulta) {
+                <th>Foto</th>
+              }
+              <th>Código</th>
+              <th>Tipo</th>
+              <th>Categoría</th>
+              <th>Sede</th>
+              @if (!isConsulta) {
+                <th>Bloque</th>
+              }
+              <th>Recibido</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.id) {
+              <tr class="clickable" (click)="open(item)">
+                @if (!isConsulta) {
+                  <td><app-secure-image [photoId]="item.cover_photo_id" /></td>
+                }
+                <td><strong>{{ item.code }}</strong></td>
+                <td>{{ item.object_type.name }}</td>
+                <td>{{ item.category.name }}</td>
+                <td>{{ (item.found_campus || item.campus)?.name }}</td>
+                @if (!isConsulta) {
+                  <td>{{ item.found_block?.name }}</td>
+                }
+                <td>{{ item.received_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</td>
+                <td>
+                  <span class="badge" [class.badge-ok]="item.status === 'DISPONIBLE'" [class.badge-info]="item.status === 'DEVUELTO'">
+                    {{ item.status }}
+                  </span>
+                  @if (item.is_active === false) {
+                    <span class="badge badge-danger">INACTIVO</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>

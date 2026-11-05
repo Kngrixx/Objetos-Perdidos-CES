@@ -1,0 +1,79 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Reclamaciones</h1>
+      <p class="muted">Para registrar, verificar, aceptar o rechazar, abra el objeto correspondiente.</p>
+    </div>
+  </div>
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="c-status">Estado</label>
+        <select id="c-status" name="status" [(ngModel)]="filters.status">
+          <option value="">Todos</option>
+          <option value="PENDIENTE">PENDIENTE</option>
+          <option value="ACEPTADA">ACEPTADA</option>
+          <option value="RECHAZADA">RECHAZADA</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="c-code">Código del objeto</label>
+        <input id="c-code" name="code" [(ngModel)]="filters.code" />
+      </div>
+      <div class="field">
+        <label for="c-active">Registro</label>
+        <select id="c-active" name="active" [(ngModel)]="filters.is_active">
+          <option value="true">Activas</option>
+          <option value="false">Inactivas</option>
+          <option value="all">Todas</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions" style="margin-top: 12px">
+      <button class="btn btn-primary" type="submit">Buscar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Objeto</th><th>Reclamante</th><th>Estado</th><th>Registrada</th><th>Decisión</th></tr>
+          </thead>
+          <tbody>
+            @for (claim of items(); track claim.id) {
+              <tr class="clickable" [routerLink]="['/objetos', claim.object_lost.id]">
+                <td>{{ claim.id }}</td>
+                <td><strong>{{ claim.object_lost.code }}</strong><div class="muted">{{ claim.object_lost.status }}</div></td>
+                <td>{{ claim.claimant.full_name }}<div class="muted">{{ claim.claimant.identification }}</div></td>
+                <td>
+                  <span class="badge" [class.badge-warn]="claim.status === 'PENDIENTE'" [class.badge-ok]="claim.status === 'ACEPTADA'"
+                    [class.badge-danger]="claim.status === 'RECHAZADA'">{{ claim.status }}</span>
+                  @if (!claim.is_active) {
+                    <span class="badge">INACTIVA</span>
+                  }
+                </td>
+                <td>{{ claim.created_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</td>
+                <td>{{ claim.decision_reason || '—' }}
+                  @if (claim.reviewed_by) {
+                    <div class="muted">{{ claim.reviewed_by.name }}</div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>

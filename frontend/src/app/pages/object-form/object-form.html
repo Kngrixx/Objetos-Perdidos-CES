@@ -1,0 +1,184 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      @if (mode === 'create') {
+        <h1>Recepción de objeto</h1>
+        <p class="muted">Usted quedará registrado como quien recibe el objeto. El código se genera al guardar.</p>
+      } @else if (mode === 'edit') {
+        <h1>Editar {{ original?.code }}</h1>
+        <p class="muted">Los valores anteriores quedan en el historial. Se exige motivo.</p>
+      } @else {
+        <h1>Corrección administrativa {{ original?.code }}</h1>
+        <p class="muted">Objeto DEVUELTO: se conserva el propietario, la devolución y el estado.</p>
+      }
+    </div>
+    <a class="btn btn-outline" [routerLink]="objectId ? ['/objetos', objectId] : ['/objetos']">Volver</a>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Cargando...</div>
+  }
+
+  <form (ngSubmit)="save()">
+    <div class="card">
+      <h2>1. Tipo de objeto</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="category">Categoría</label>
+          <select id="category" name="category" [(ngModel)]="form.category_id" (ngModelChange)="onCategoryChange()">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (category of categories(); track category.id) {
+              <option [ngValue]="category.id">{{ category.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="type-search">Buscar tipo</label>
+          <input id="type-search" name="typeSearch" [(ngModel)]="typeSearch" (ngModelChange)="loadTypes()"
+            placeholder="Escriba para filtrar" [disabled]="!form.category_id" />
+        </div>
+        <div class="field">
+          <label for="type">Tipo</label>
+          <select id="type" name="type" [(ngModel)]="form.object_type_id" [disabled]="!form.category_id">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (type of types(); track type.id) {
+              <option [ngValue]="type.id">{{ type.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field" style="justify-content: flex-end">
+          <button class="btn btn-outline" type="button" (click)="showTypeModal.set(true)">+ Crear tipo de objeto</button>
+        </div>
+        <div class="field wide">
+          <label for="description">Características del objeto</label>
+          <textarea id="description" name="description" [(ngModel)]="form.description" maxlength="2000"
+            placeholder="Color, marca, estado, marcas visibles..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Hallazgo</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="found-campus">Sede</label>
+          <select id="found-campus" name="foundCampus" [(ngModel)]="form.found_campus_id" (ngModelChange)="onCampusChange('found')">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (campus of campuses(); track campus.id) {
+              <option [ngValue]="campus.id">{{ campus.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="found-block">Bloque</label>
+          <select id="found-block" name="foundBlock" [(ngModel)]="form.found_block_id" [disabled]="!form.found_campus_id">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (block of foundBlocks(); track block.id) {
+              <option [ngValue]="block.id">{{ block.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="found-at">Fecha y hora del hallazgo</label>
+          <input id="found-at" type="datetime-local" name="foundAt" [(ngModel)]="form.found_at" [max]="maxDate" />
+          <span class="hint">Hora de Bogotá. No puede ser futura.</span>
+        </div>
+        <div class="field wide">
+          <label for="found-location">Lugar preciso</label>
+          <input id="found-location" name="foundLocation" [(ngModel)]="form.found_location" maxlength="255"
+            placeholder="Ej.: cafetería, mesa junto a la ventana" />
+        </div>
+      </div>
+    </div>
+
+    @if (mode !== 'correction') {
+      <div class="card">
+        <h2>3. Quién entrega</h2>
+        @if (mode === 'edit' && original?.finder_person) {
+          <p class="muted">Actual: {{ original?.finder_person?.full_name }} ({{ original?.finder_person?.identification }}).
+            Seleccione otra persona solo si hay que corregirla.</p>
+        }
+        <app-person-picker label="Persona que entrega (no necesita cuenta)" [departments]="departments()"
+          (selected)="onFinderSelected($event)" />
+        <div class="form-grid" style="margin-top: 10px">
+          <div class="field">
+            <label for="finder-dep">Dependencia declarada</label>
+            <select id="finder-dep" name="finderDep" [(ngModel)]="form.finder_department_id">
+              <option [ngValue]="null">Sin dependencia</option>
+              @for (department of departments(); track department.id) {
+                <option [ngValue]="department.id">{{ department.name }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="card">
+      <h2>{{ mode === 'correction' ? '3' : '4' }}. Custodia</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="custody-campus">Sede de custodia</label>
+          <select id="custody-campus" name="custodyCampus" [(ngModel)]="form.custody_campus_id" (ngModelChange)="onCampusChange('custody')">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (campus of campuses(); track campus.id) {
+              <option [ngValue]="campus.id">{{ campus.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="custody-block">Bloque de custodia</label>
+          <select id="custody-block" name="custodyBlock" [(ngModel)]="form.custody_block_id" [disabled]="!form.custody_campus_id">
+            <option [ngValue]="null">Seleccione...</option>
+            @for (block of custodyBlocks(); track block.id) {
+              <option [ngValue]="block.id">{{ block.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field wide">
+          <label for="custody-location">Ubicación de custodia</label>
+          <input id="custody-location" name="custodyLocation" [(ngModel)]="form.custody_location" maxlength="255"
+            placeholder="Ej.: oficina 101, estante 2" />
+        </div>
+      </div>
+    </div>
+
+    @if (mode === 'create') {
+      <div class="card">
+        <h2>5. Fotografías</h2>
+        <p class="muted">De 1 a 5 fotos JPEG o PNG, máximo 5 MB cada una. Puede retirar una foto antes de guardar.</p>
+        <input type="file" accept="image/jpeg,image/png" multiple (change)="onFilesSelected($event)" />
+        <div class="photo-grid" style="margin-top: 12px">
+          @for (photo of photos(); track photo.url; let index = $index) {
+            <div class="photo-card">
+              <img [src]="photo.url" [alt]="photo.file.name" />
+              <div class="muted" style="margin: 4px 0">{{ photo.file.name }}</div>
+              <button class="btn btn-outline btn-sm" type="button" (click)="removePhoto(index)">Quitar</button>
+            </div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="card">
+        <h2>Motivo de la corrección</h2>
+        <textarea name="reason" [(ngModel)]="reason" maxlength="500" placeholder="¿Por qué se corrige?"></textarea>
+        <p class="hint">Las fotos se gestionan desde el detalle del objeto.</p>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="alert alert-error">{{ error() }}</div>
+    }
+    <div class="actions">
+      <button class="btn btn-primary" type="submit" [disabled]="saving()">
+        {{ saving() ? 'Guardando...' : mode === 'create' ? 'Guardar recepción' : 'Guardar cambios' }}
+      </button>
+      <a class="btn btn-outline" [routerLink]="objectId ? ['/objetos', objectId] : ['/objetos']">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+@if (showTypeModal()) {
+  <app-type-create-modal [categories]="categories()" [categoryId]="form.category_id"
+    (created)="onTypeCreated($event)" (closed)="showTypeModal.set(false)" />
+}

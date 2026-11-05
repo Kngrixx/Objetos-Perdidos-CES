@@ -1,0 +1,94 @@
+.topbar {
+  background: #1e3a8a;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.topbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 1.05rem;
+}
+
+.brand span {
+  color: #93c5fd;
+}
+
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  flex: 1;
+}
+
+nav a {
+  color: #dbeafe;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+nav a:hover,
+nav a.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.menu-toggle {
+  display: none;
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 900px) {
+  .menu-toggle {
+    display: block;
+  }
+
+  nav {
+    display: none;
+    flex-basis: 100%;
+    flex-direction: column;
+  }
+
+  nav.open {
+    display: flex;
+  }
+
+  .user {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+
+  .user-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

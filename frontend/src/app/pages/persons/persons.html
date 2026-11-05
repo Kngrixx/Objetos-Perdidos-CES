@@ -1,0 +1,154 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Personas</h1>
+      <p class="muted">Quienes entregan o reclaman objetos. No necesitan cuenta en el sistema.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="newPerson()">+ Nueva persona</button>
+  </div>
+
+  @if (success()) {
+    <div class="alert alert-success">{{ success() }}</div>
+  }
+
+  @if (showForm()) {
+    <form class="card" (ngSubmit)="save()">
+      <h2>{{ editingId ? 'Corregir persona' : 'Registrar persona' }}</h2>
+      <div class="form-grid">
+        <div class="field">
+          <label for="p-id">Identificación</label>
+          <input id="p-id" name="identification" [(ngModel)]="form.identification" maxlength="30" />
+        </div>
+        <div class="field">
+          <label for="p-name">Nombre completo</label>
+          <input id="p-name" name="fullName" [(ngModel)]="form.full_name" maxlength="150" />
+        </div>
+        <div class="field">
+          <label for="p-type">Vinculación</label>
+          <select id="p-type" name="type" [(ngModel)]="form.affiliation_type">
+            @for (type of affiliationTypes; track type) {
+              <option [value]="type">{{ type }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="p-dep">Dependencia</label>
+          <select id="p-dep" name="department" [(ngModel)]="form.department_id">
+            <option [ngValue]="null">Sin dependencia</option>
+            @for (department of departments(); track department.id) {
+              <option [ngValue]="department.id">{{ department.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="p-email">Correo (opcional)</label>
+          <input id="p-email" type="email" name="email" [(ngModel)]="form.email" />
+        </div>
+        <div class="field">
+          <label for="p-phone">Teléfono (opcional)</label>
+          <input id="p-phone" name="phone" [(ngModel)]="form.phone" maxlength="30" />
+        </div>
+        @if (editingId) {
+          <div class="field wide">
+            <label for="p-reason">Motivo de la corrección (opcional)</label>
+            <input id="p-reason" name="reason" [(ngModel)]="form.reason" />
+          </div>
+        }
+      </div>
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+      <div class="actions" style="margin-top: 12px">
+        <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Guardando...' : 'Guardar' }}</button>
+        <button class="btn btn-outline" type="button" (click)="showForm.set(false)">Cancelar</button>
+      </div>
+    </form>
+  }
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="s-text">Identificación o nombre</label>
+        <input id="s-text" name="text" [(ngModel)]="filters.text" />
+      </div>
+      <div class="field">
+        <label for="s-type">Vinculación</label>
+        <select id="s-type" name="type" [(ngModel)]="filters.affiliation_type">
+          <option value="">Todas</option>
+          @for (type of affiliationTypes; track type) {
+            <option [value]="type">{{ type }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="s-active">Registro</label>
+        <select id="s-active" name="active" [(ngModel)]="filters.is_active">
+          <option value="true">Activas</option>
+          <option value="false">Inactivas</option>
+          <option value="all">Todas</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions" style="margin-top: 12px">
+      <button class="btn btn-primary" type="submit">Buscar</button>
+    </div>
+  </form>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Identificación</th><th>Nombre</th><th>Vinculación</th><th>Dependencia</th><th>Contacto</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (person of items(); track person.id) {
+              <tr>
+                <td>{{ person.identification }}</td>
+                <td>{{ person.full_name }}</td>
+                <td>{{ person.affiliation_type }}</td>
+                <td>{{ person.department_name || '—' }}</td>
+                <td>{{ person.email || '' }} {{ person.phone || '' }}</td>
+                <td>
+                  <span class="badge" [class.badge-ok]="person.is_active" [class.badge-danger]="!person.is_active">
+                    {{ person.is_active ? 'ACTIVA' : 'INACTIVA' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions">
+                    @if (person.is_active) {
+                      <button class="btn btn-outline btn-sm" type="button" (click)="edit(person)">Corregir</button>
+                    }
+                    @if (isAdmin) {
+                      <button class="btn btn-outline btn-sm" type="button" (click)="openDialog(person)">
+                        {{ person.is_active ? 'Inactivar' : 'Reactivar' }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>
+
+@if (dialogPerson(); as person) {
+  <app-reason-dialog
+    [title]="(person.is_active ? 'Inactivar a ' : 'Reactivar a ') + person.full_name"
+    description="No se puede inactivar si tiene reclamaciones pendientes o aceptadas sin devolución."
+    [confirmLabel]="person.is_active ? 'Inactivar' : 'Reactivar'"
+    [danger]="person.is_active"
+    [busy]="dialogBusy()"
+    [errorText]="dialogError()"
+    (confirmed)="toggleActive($event)"
+    (cancelled)="dialogPerson.set(null)"
+  />
+}

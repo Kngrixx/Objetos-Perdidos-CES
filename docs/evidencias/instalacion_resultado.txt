@@ -1,0 +1,28 @@
+== 2026-11-03 21:24 -05 - base recreada desde cero
+INFO  [alembic.runtime.migration] Running upgrade  -> 2ce4759b8957, create roles and users tables
+INFO  [alembic.runtime.migration] Running upgrade 2ce4759b8957 -> 8cc5e752e915, create password reset and token revocation tables
+INFO  [alembic.runtime.migration] Running upgrade 8cc5e752e915 -> e9355e9dc03f, create catalog tables
+INFO  [alembic.runtime.migration] Running upgrade e9355e9dc03f -> bfabf501638e, create persons table
+INFO  [alembic.runtime.migration] Running upgrade bfabf501638e -> 15059d970a87, create object lost and object photos tables
+INFO  [alembic.runtime.migration] Running upgrade 15059d970a87 -> 9db9c7695304, create claims and return records tables
+INFO  [alembic.runtime.migration] Running upgrade 9db9c7695304 -> f357c059a7eb, create audit logs table
+INFO  [alembic.runtime.migration] Running upgrade f357c059a7eb -> 8d6746a80648, add triggers that block delete and update of history
+Seed ejecutado. Registros NUEVOS en esta ejecución:
+  roles: 3
+  campuses: 2
+  blocks: 4
+  departments: 15
+  categories: 12
+  object_types: 129
+  admin: 1
+Totales en la base: 12 categorías y 129 tipos de objeto.
+Administrador de pruebas: admin@ces.test
+  admin: 0
+Totales en la base: 12 categorías y 129 tipos de objeto.
+Administrador de pruebas: admin@ces.test
+Datos de demostración creados:
+  objects: 24
+  returned: 5
+  inactive: 2
+  persons: 12
+Usuarios demo: operador.demo@ces.test y consulta.demo@ces.test (contraseña DEMO_PASSWORD o Demo2026!)

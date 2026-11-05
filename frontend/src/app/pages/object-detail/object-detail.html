@@ -1,0 +1,290 @@
+<div class="page">
+  @if (loading() && !item()) {
+    <div class="loading">Cargando objeto...</div>
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+  @if (success()) {
+    <div class="alert alert-success">{{ success() }}</div>
+  }
+
+  @if (item(); as o) {
+    <div class="page-header">
+      <div>
+        <h1>{{ o.code }} · {{ o.object_type.name }}</h1>
+        <div class="actions">
+          <span class="badge" [class.badge-ok]="o.status === 'DISPONIBLE'" [class.badge-info]="o.status === 'DEVUELTO'">{{ o.status }}</span>
+          @if (o.is_active === false) {
+            <span class="badge badge-danger">INACTIVO</span>
+          }
+          <span class="muted">{{ o.category.name }}</span>
+        </div>
+      </div>
+      <div class="actions">
+        <a class="btn btn-outline" routerLink="/objetos">Volver</a>
+        @if (canOperate && isEditable()) {
+          <a class="btn btn-primary" [routerLink]="['/objetos', o.id, 'editar']">Editar</a>
+          <button class="btn btn-danger" type="button" (click)="inactivateObject()">Inactivar</button>
+        }
+        @if (isAdmin && o.status === 'DEVUELTO') {
+          <a class="btn btn-outline" [routerLink]="['/objetos', o.id, 'editar']">Corrección administrativa</a>
+        }
+        @if (isAdmin && o.is_active === false) {
+          <button class="btn btn-success" type="button" (click)="reactivateObject()">Reactivar</button>
+        }
+      </div>
+    </div>
+
+    @if (isConsulta) {
+      <!-- Proyección reducida para CONSULTA: sin datos personales, ubicaciones ni fotos -->
+      <div class="card">
+        <dl class="details">
+          <dt>Código</dt><dd>{{ o.code }}</dd>
+          <dt>Tipo</dt><dd>{{ o.object_type.name }}</dd>
+          <dt>Categoría</dt><dd>{{ o.category.name }}</dd>
+          <dt>Sede</dt><dd>{{ o.campus?.name }}</dd>
+          <dt>Recibido</dt><dd>{{ o.received_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</dd>
+          <dt>Estado</dt><dd>{{ o.status }}</dd>
+        </dl>
+        <p class="muted">Para reclamar el objeto acérquese a la oficina de objetos perdidos con su documento.</p>
+      </div>
+    } @else {
+      <div class="grid grid-2">
+        <div class="card">
+          <h2>Datos del objeto</h2>
+          <dl class="details">
+            <dt>Descripción</dt><dd>{{ o.description }}</dd>
+            <dt>Hallazgo</dt><dd>{{ o.found_campus?.name }} · {{ o.found_block?.name }} · {{ o.found_location }}</dd>
+            <dt>Fecha de hallazgo</dt><dd>{{ o.found_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</dd>
+            <dt>Custodia</dt><dd>{{ o.custody_campus?.name }} · {{ o.custody_block?.name }} · {{ o.custody_location }}</dd>
+            <dt>Versión</dt><dd>{{ o.version }}</dd>
+            @if (o.correction_reason) {
+              <dt>Última corrección</dt><dd>{{ o.correction_reason }}</dd>
+            }
+            @if (o.is_active === false) {
+              <dt>Motivo de inactivación</dt><dd>{{ o.inactivation_reason }}</dd>
+            }
+          </dl>
+        </div>
+        <div class="card">
+          <h2>Responsables</h2>
+          <h3>Recepción del hallazgo</h3>
+          <dl class="details">
+            <dt>Entrega</dt>
+            <dd>
+              {{ o.finder_person?.full_name }} ({{ o.finder_person?.identification }}) ·
+              {{ o.finder_person?.affiliation_type }}
+              @if (o.finder_department) {
+                · {{ o.finder_department.name }}
+              }
+            </dd>
+            <dt>Recibe (operador)</dt><dd>{{ o.received_by?.name }}</dd>
+            <dt>Fecha de recepción</dt><dd>{{ o.received_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</dd>
+          </dl>
+          @if (o.return; as r) {
+            <h3 style="margin-top: 14px">Devolución al propietario</h3>
+            <dl class="details">
+              <dt>Entrega (operador)</dt><dd>{{ r.delivered_by.name }}</dd>
+              <dt>Recibe (propietario)</dt><dd>{{ r.owner.full_name }} ({{ r.owner.identification }})</dd>
+              <dt>Fecha</dt><dd>{{ r.returned_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</dd>
+              <dt>Constancia</dt>
+              <dd>
+                {{ r.receipt_reference }}
+                <button class="btn btn-outline btn-sm" type="button" (click)="downloadReceipt(r.id, r.receipt_reference)">Descargar PDF</button>
+              </dd>
+            </dl>
+          }
+        </div>
+      </div>
+
+      <!-- Fotos -->
+      <div class="card">
+        <div class="page-header" style="margin-bottom: 8px">
+          <h2>Fotografías ({{ o.active_photos }} activas)</h2>
+          @if (isEditable()) {
+            <label class="btn btn-outline btn-sm">
+              {{ uploading() ? 'Subiendo...' : '+ Agregar fotos' }}
+              <input type="file" accept="image/jpeg,image/png" multiple hidden (change)="onAddPhotos($event)" />
+            </label>
+          }
+        </div>
+        <div class="photo-grid">
+          @for (photo of photos(); track photo.id) {
+            <div class="photo-card" [class.inactive]="!photo.is_active">
+              <app-secure-image [photoId]="photo.id" cssClass="" />
+              <div class="muted">{{ (photo.size_bytes / 1024).toFixed(0) }} KB · {{ photo.uploaded_by.name }}</div>
+              @if (!photo.is_active) {
+                <div><span class="badge">INACTIVA</span> {{ photo.inactivation_reason }}</div>
+              }
+              <div class="actions" style="margin-top: 6px">
+                @if (photo.is_active && isEditable()) {
+                  <button class="btn btn-outline btn-sm" type="button" (click)="inactivatePhoto(photo)">Inactivar</button>
+                }
+                @if (!photo.is_active && isAdmin && isEditable()) {
+                  <button class="btn btn-outline btn-sm" type="button" (click)="reactivatePhoto(photo)">Reactivar</button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Reclamaciones -->
+      <div class="card">
+        <div class="page-header" style="margin-bottom: 8px">
+          <h2>Reclamaciones</h2>
+          @if (isEditable() && !acceptedClaim()) {
+            <button class="btn btn-outline btn-sm" type="button" (click)="showClaimForm.set(!showClaimForm())">
+              {{ showClaimForm() ? 'Cancelar' : '+ Registrar reclamación' }}
+            </button>
+          }
+        </div>
+
+        @if (showClaimForm()) {
+          <div class="claim-form">
+            <app-person-picker label="Persona que reclama" [departments]="departments()" (selected)="claimant.set($event)" />
+            <div class="form-grid" style="margin-top: 10px">
+              <div class="field wide">
+                <label for="evidence">Evidencia de pertenencia</label>
+                <textarea id="evidence" name="evidence" [(ngModel)]="claimForm.evidence"
+                  placeholder="Características no públicas que describe el reclamante"></textarea>
+              </div>
+              <div class="field wide">
+                <label for="notes">Notas de verificación (opcional)</label>
+                <input id="notes" name="notes" [(ngModel)]="claimForm.verification_notes" />
+              </div>
+              <label class="check">
+                <input type="checkbox" name="verified" [(ngModel)]="claimForm.identity_verified" />
+                Verifiqué la identificación del reclamante
+              </label>
+            </div>
+            @if (claimError()) {
+              <div class="alert alert-error">{{ claimError() }}</div>
+            }
+            <button class="btn btn-primary btn-sm" type="button" (click)="saveClaim()" [disabled]="savingClaim()">
+              {{ savingClaim() ? 'Guardando...' : 'Guardar reclamación' }}
+            </button>
+          </div>
+        }
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Reclamante</th><th>Evidencia</th><th>Identidad</th><th>Estado</th><th>Acciones</th></tr>
+            </thead>
+            <tbody>
+              @for (claim of claims(); track claim.id) {
+                <tr>
+                  <td>{{ claim.id }}</td>
+                  <td>{{ claim.claimant.full_name }}<div class="muted">{{ claim.claimant.identification }}</div></td>
+                  <td>{{ claim.evidence }}</td>
+                  <td>{{ claim.identity_verified ? 'Verificada' : 'Sin verificar' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-warn]="claim.status === 'PENDIENTE'" [class.badge-ok]="claim.status === 'ACEPTADA'"
+                      [class.badge-danger]="claim.status === 'RECHAZADA'">{{ claim.status }}</span>
+                    @if (!claim.is_active) {
+                      <span class="badge">INACTIVA</span>
+                    }
+                    @if (claim.decision_reason) {
+                      <div class="muted">{{ claim.decision_reason }}</div>
+                    }
+                  </td>
+                  <td>
+                    @if (claim.status === 'PENDIENTE' && claim.is_active && isEditable()) {
+                      <div class="actions">
+                        @if (!claim.identity_verified) {
+                          <button class="btn btn-outline btn-sm" type="button" (click)="markVerified(claim)">Verificar identidad</button>
+                        }
+                        <button class="btn btn-success btn-sm" type="button" (click)="decide(claim, 'ACEPTADA')"
+                          [disabled]="!claim.identity_verified || !!acceptedClaim()">Aceptar</button>
+                        <button class="btn btn-danger btn-sm" type="button" (click)="decide(claim, 'RECHAZADA')">Rechazar</button>
+                        @if (isAdmin) {
+                          <button class="btn btn-outline btn-sm" type="button" (click)="inactivateClaim(claim)">Inactivar</button>
+                        }
+                      </div>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr><td colspan="6" class="muted">No hay reclamaciones para este objeto.</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Devolución -->
+      @if (acceptedClaim(); as claim) {
+        @if (isEditable()) {
+          <div class="card">
+            <h2>Registrar devolución</h2>
+            <p class="muted">
+              Propietario: <strong>{{ claim.claimant.full_name }}</strong> ({{ claim.claimant.identification }}).
+              Usted quedará registrado como quien entrega. La devolución es única e irreversible.
+            </p>
+            <div class="form-grid">
+              <div class="field wide">
+                <label for="summary">Resumen de la verificación</label>
+                <textarea id="summary" name="summary" [(ngModel)]="returnForm.verification_summary"
+                  placeholder="Documento revisado y características verificadas"></textarea>
+              </div>
+              <div class="field wide">
+                <label for="return-notes">Notas (opcional)</label>
+                <input id="return-notes" name="returnNotes" [(ngModel)]="returnForm.notes" />
+              </div>
+              <label class="check">
+                <input type="checkbox" name="confirmation" [(ngModel)]="returnForm.owner_confirmation" />
+                El propietario confirma que recibió el objeto (constancia digital)
+              </label>
+            </div>
+            @if (returnError()) {
+              <div class="alert alert-error">{{ returnError() }}</div>
+            }
+            <button class="btn btn-success" type="button" (click)="saveReturn()" [disabled]="savingReturn()">
+              {{ savingReturn() ? 'Registrando...' : 'Registrar devolución' }}
+            </button>
+          </div>
+        }
+      }
+
+      <!-- Historial -->
+      <div class="card">
+        <h2>Historial de cambios</h2>
+        <ol class="timeline">
+          @for (log of history(); track log.id) {
+            <li>
+              <div>
+                <strong>{{ actionLabel(log.action) }}</strong>
+                <span class="muted">· {{ entityLabel(log.entity) }} #{{ log.entity_id }} · {{ log.actor?.name || 'Sistema' }} ·
+                  {{ log.occurred_at | date: 'yyyy-MM-dd HH:mm:ss' : '-0500' }}</span>
+              </div>
+              @if (log.reason) {
+                <div class="muted">Motivo: {{ log.reason }}</div>
+              }
+              @if (log.action !== 'CREATE' && log.after_data) {
+                <table class="changes">
+                  @for (change of log.after_data | keyvalue; track change.key) {
+                    <tr>
+                      <td>{{ change.key }}</td>
+                      <td class="before">{{ showValue(log.before_data?.[change.key]) }}</td>
+                      <td>→</td>
+                      <td class="after">{{ showValue(change.value) }}</td>
+                    </tr>
+                  }
+                </table>
+              }
+            </li>
+          } @empty {
+            <li class="muted">Sin registros.</li>
+          }
+        </ol>
+      </div>
+    }
+  }
+</div>
+
+@if (dialog(); as d) {
+  <app-reason-dialog [title]="d.title" [description]="d.description" [confirmLabel]="d.confirmLabel" [danger]="d.danger"
+    [busy]="dialogBusy()" [errorText]="dialogError()" (confirmed)="runDialog($event)" (cancelled)="dialog.set(null)" />
+}

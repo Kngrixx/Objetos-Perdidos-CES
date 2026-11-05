@@ -1,0 +1,28 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" routerLink="/inicio">Objetos perdidos <span>CES</span></a>
+    <button class="menu-toggle" type="button" (click)="menuOpen.set(!menuOpen())" aria-label="Abrir menú">☰</button>
+    <nav [class.open]="menuOpen()">
+      @for (item of visibleMenu(); track item.link) {
+        <a
+          [routerLink]="item.link"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.link === '/objetos' }"
+          (click)="menuOpen.set(false)"
+          >{{ item.label }}</a
+        >
+      }
+      <a routerLink="/cuenta" routerLinkActive="active" (click)="menuOpen.set(false)">Mi cuenta</a>
+    </nav>
+    @if (authService.user(); as user) {
+      <div class="user">
+        <span class="user-name">{{ user.full_name }}</span>
+        <span class="badge badge-info">{{ user.role }}</span>
+        <button class="btn btn-outline btn-sm" type="button" (click)="logout()">Salir</button>
+      </div>
+    }
+  </div>
+</header>
+<main>
+  <router-outlet></router-outlet>
+</main>

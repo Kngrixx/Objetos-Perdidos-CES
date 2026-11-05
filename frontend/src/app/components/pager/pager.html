@@ -1,0 +1,11 @@
+<div class="pager">
+  <span class="muted">{{ total }} resultado(s) · página {{ page }} de {{ pages }}</span>
+  <div class="actions">
+    <button class="btn btn-outline btn-sm" type="button" [disabled]="page <= 1" (click)="go(page - 1)">
+      ‹ Anterior
+    </button>
+    <button class="btn btn-outline btn-sm" type="button" [disabled]="page >= pages" (click)="go(page + 1)">
+      Siguiente ›
+    </button>
+  </div>
+</div>

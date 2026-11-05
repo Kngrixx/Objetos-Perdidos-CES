@@ -1,0 +1,90 @@
+<div class="picker">
+  <label>{{ label }}</label>
+  @if (chosen(); as person) {
+    <div class="chosen">
+      <div>
+        <strong>{{ person.full_name }}</strong>
+        <div class="muted">
+          {{ person.identification }} · {{ person.affiliation_type }}
+          @if (person.department_name) {
+            · {{ person.department_name }}
+          }
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" (click)="clear()">Cambiar</button>
+    </div>
+  } @else {
+    <div class="actions">
+      <input
+        name="person-search"
+        [(ngModel)]="search"
+        placeholder="Identificación o nombre"
+        (keydown.enter)="$event.preventDefault(); doSearch()"
+        style="flex: 1; min-width: 180px"
+      />
+      <button class="btn btn-outline" type="button" (click)="doSearch()">Buscar</button>
+      <button class="btn btn-outline" type="button" (click)="startCreate()">Registrar nueva</button>
+    </div>
+    @if (results().length > 0) {
+      <ul class="results">
+        @for (person of results(); track person.id) {
+          <li>
+            <button type="button" (click)="choose(person)">
+              {{ person.full_name }} <span class="muted">· {{ person.identification }} · {{ person.affiliation_type }}</span>
+            </button>
+          </li>
+        }
+      </ul>
+    } @else if (searched() && !creating()) {
+      <p class="muted">No hay coincidencias. Puede registrarla con «Registrar nueva».</p>
+    }
+    @if (creating()) {
+      <div class="new-person">
+        <div class="form-grid">
+          <div class="field">
+            <label for="np-id">Identificación</label>
+            <input id="np-id" name="np-id" [(ngModel)]="newPerson.identification" maxlength="30" />
+          </div>
+          <div class="field">
+            <label for="np-name">Nombre completo</label>
+            <input id="np-name" name="np-name" [(ngModel)]="newPerson.full_name" maxlength="150" />
+          </div>
+          <div class="field">
+            <label for="np-type">Vinculación</label>
+            <select id="np-type" name="np-type" [(ngModel)]="newPerson.affiliation_type">
+              @for (type of affiliationTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="np-dep">Dependencia (opcional)</label>
+            <select id="np-dep" name="np-dep" [(ngModel)]="newPerson.department_id">
+              <option [ngValue]="null">Sin dependencia</option>
+              @for (department of departments; track department.id) {
+                <option [ngValue]="department.id">{{ department.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="np-email">Correo (opcional)</label>
+            <input id="np-email" name="np-email" type="email" [(ngModel)]="newPerson.email" />
+          </div>
+          <div class="field">
+            <label for="np-phone">Teléfono (opcional)</label>
+            <input id="np-phone" name="np-phone" [(ngModel)]="newPerson.phone" maxlength="30" />
+          </div>
+        </div>
+        <div class="actions" style="margin-top: 8px">
+          <button class="btn btn-primary btn-sm" type="button" (click)="create()" [disabled]="saving()">
+            {{ saving() ? 'Guardando...' : 'Guardar persona' }}
+          </button>
+          <button class="btn btn-outline btn-sm" type="button" (click)="creating.set(false)">Cancelar</button>
+        </div>
+      </div>
+    }
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+</div>

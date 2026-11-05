@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+backend/instance/
+
+# Node / Angular
+node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Editor
+.vscode/

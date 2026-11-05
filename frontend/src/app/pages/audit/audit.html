@@ -1,0 +1,87 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Auditoría</h1>
+      <p class="muted">Registros de solo inserción: la base impide modificarlos o borrarlos.</p>
+    </div>
+  </div>
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="a-entity">Entidad</label>
+        <select id="a-entity" name="entity" [(ngModel)]="filters.entity">
+          <option value="">Todas</option>
+          @for (entity of entities; track entity) {
+            <option [value]="entity">{{ entity }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="a-id">Id del registro</label>
+        <input id="a-id" name="entityId" [(ngModel)]="filters.entity_id" />
+      </div>
+      <div class="field">
+        <label for="a-actor">Id del actor</label>
+        <input id="a-actor" name="actor" [(ngModel)]="filters.actor_user_id" />
+      </div>
+      <div class="field">
+        <label for="a-action">Acción</label>
+        <input id="a-action" name="action" [(ngModel)]="filters.action" placeholder="UPDATE, INACTIVATE..." />
+      </div>
+      <div class="field">
+        <label for="a-from">Desde</label>
+        <input id="a-from" type="date" name="from" [(ngModel)]="filters.date_from" />
+      </div>
+      <div class="field">
+        <label for="a-to">Hasta</label>
+        <input id="a-to" type="date" name="to" [(ngModel)]="filters.date_to" />
+      </div>
+    </div>
+    <div class="actions" style="margin-top: 12px">
+      <button class="btn btn-primary" type="submit">Buscar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fecha</th><th>Entidad</th><th>Acción</th><th>Actor</th><th>Motivo</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (log of items(); track log.id) {
+              <tr>
+                <td>{{ log.occurred_at | date: 'yyyy-MM-dd HH:mm:ss' : '-0500' }}</td>
+                <td>{{ log.entity }} #{{ log.entity_id }}</td>
+                <td><span class="badge badge-info">{{ log.action }}</span></td>
+                <td>{{ log.actor?.name || 'Sistema' }}</td>
+                <td>{{ log.reason || '—' }}</td>
+                <td><button class="btn btn-outline btn-sm" type="button" (click)="toggle(log.id)">{{ expanded[log.id] ? 'Ocultar' : 'Ver datos' }}</button></td>
+              </tr>
+              @if (expanded[log.id]) {
+                <tr>
+                  <td colspan="6">
+                    <div class="grid grid-2">
+                      <div><strong>Antes</strong><pre>{{ log.before_data | json }}</pre></div>
+                      <div><strong>Después</strong><pre>{{ log.after_data | json }}</pre></div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>

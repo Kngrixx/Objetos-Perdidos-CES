@@ -1,0 +1,14 @@
+Objeto OBJ-000029 con reclamación ACEPTADA #14.
+Enviando 10 devoluciones simultáneas...
+  petición 1: HTTP 409 (79 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 2: HTTP 201 (77 ms) - Devolución registrada. El objeto quedó DEVUELTO.
+  petición 3: HTTP 409 (58 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 4: HTTP 409 (66 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 5: HTTP 409 (92 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 6: HTTP 409 (99 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 7: HTTP 409 (90 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 8: HTTP 409 (102 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 9: HTTP 409 (96 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+  petición 10: HTTP 409 (48 ms) - El objeto ya fue devuelto. No se permite una segunda devolución.
+Devoluciones registradas en la base para el objeto: 1
+RESULTADO: CORRECTO (una 201, las demás 409)

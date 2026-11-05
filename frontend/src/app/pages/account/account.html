@@ -1,0 +1,46 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Mi cuenta</h1>
+  </div>
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Perfil</h2>
+      @if (me(); as user) {
+        <dl class="details">
+          <dt>Nombre</dt><dd>{{ user.full_name }}</dd>
+          <dt>Correo</dt><dd>{{ user.email }}</dd>
+          <dt>Identificación</dt><dd>{{ user.identification }}</dd>
+          <dt>Rol</dt><dd><span class="badge badge-info">{{ user.role }}</span></dd>
+        </dl>
+        <p class="muted">Para cambiar el rol o los datos, contacte a un administrador.</p>
+      } @else {
+        <div class="loading">Cargando...</div>
+      }
+    </div>
+    <form class="card" (ngSubmit)="changePassword()">
+      <h2>Cambiar contraseña</h2>
+      <p class="muted">Al cambiarla se cierran las demás sesiones abiertas.</p>
+      <div class="field">
+        <label for="current">Contraseña actual</label>
+        <input id="current" type="password" name="current" [(ngModel)]="current" autocomplete="current-password" />
+      </div>
+      <div class="field" style="margin-top: 8px">
+        <label for="next">Nueva contraseña</label>
+        <input id="next" type="password" name="next" [(ngModel)]="next" autocomplete="new-password" />
+      </div>
+      <div class="field" style="margin-top: 8px">
+        <label for="confirmation">Confirmar nueva contraseña</label>
+        <input id="confirmation" type="password" name="confirmation" [(ngModel)]="confirmation" autocomplete="new-password" />
+      </div>
+      @if (error()) {
+        <div class="alert alert-error">{{ error() }}</div>
+      }
+      @if (success()) {
+        <div class="alert alert-success">{{ success() }}</div>
+      }
+      <button class="btn btn-primary" type="submit" style="margin-top: 10px" [disabled]="saving()">
+        {{ saving() ? 'Guardando...' : 'Cambiar contraseña' }}
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,28 @@
+<div class="modal-backdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h2>{{ title }}</h2>
+    @if (description) {
+      <p class="muted">{{ description }}</p>
+    }
+    <div class="field">
+      <label for="reason">Motivo (obligatorio)</label>
+      <textarea id="reason" name="reason" [(ngModel)]="reason" maxlength="500"></textarea>
+    </div>
+    @if (localError() || errorText) {
+      <div class="alert alert-error">{{ localError() || errorText }}</div>
+    }
+    <div class="actions" style="justify-content: flex-end; margin-top: 12px">
+      <button class="btn btn-outline" type="button" (click)="cancelled.emit()" [disabled]="busy">Cancelar</button>
+      <button
+        class="btn"
+        [class.btn-danger]="danger"
+        [class.btn-primary]="!danger"
+        type="button"
+        (click)="confirm()"
+        [disabled]="busy"
+      >
+        {{ busy ? 'Guardando...' : confirmLabel }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,161 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Catálogos</h1>
+      <p class="muted">
+        Los nombres se comparan sin mayúsculas, espacios repetidos ni tildes (se conserva la ñ). Nada se borra: se inactiva con motivo.
+      </p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    @for (tab of tabs; track tab.kind) {
+      <button type="button" [class.active]="kind === tab.kind" (click)="selectTab(tab.kind)">{{ tab.label }}</button>
+    }
+  </div>
+
+  @if (success()) {
+    <div class="alert alert-success">{{ success() }}</div>
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  @if (canCreate) {
+    <form class="card" (ngSubmit)="create()">
+      <h2>Agregar</h2>
+      <div class="form-grid">
+        @if (hasParent) {
+          <div class="field">
+            <label for="new-parent">{{ parentLabel }}</label>
+            <select id="new-parent" name="parent" [(ngModel)]="newItem.parent_id">
+              <option [ngValue]="null">Seleccione...</option>
+              @for (option of parentOptions; track option.id) {
+                <option [ngValue]="option.id">{{ option.name }}</option>
+              }
+            </select>
+          </div>
+        }
+        <div class="field">
+          <label for="new-name">Nombre</label>
+          <input id="new-name" name="name" [(ngModel)]="newItem.name" maxlength="150" />
+        </div>
+        <div class="field" style="justify-content: flex-end">
+          <button class="btn btn-primary" type="submit" [disabled]="saving()">{{ saving() ? 'Guardando...' : 'Agregar' }}</button>
+        </div>
+      </div>
+    </form>
+  }
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      @if (hasParent) {
+        <div class="field">
+          <label for="f-parent">{{ parentLabel }}</label>
+          <select id="f-parent" name="fparent" [(ngModel)]="filters.parent_id">
+            <option [ngValue]="null">Todas</option>
+            @for (option of parentOptions; track option.id) {
+              <option [ngValue]="option.id">{{ option.name }}</option>
+            }
+          </select>
+        </div>
+      }
+      <div class="field">
+        <label for="f-name">Nombre</label>
+        <input id="f-name" name="fname" [(ngModel)]="filters.name" />
+      </div>
+      @if (isAdmin) {
+        <div class="field">
+          <label for="f-active">Registro</label>
+          <select id="f-active" name="factive" [(ngModel)]="filters.is_active">
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+            <option value="all">Todos</option>
+          </select>
+        </div>
+      }
+      <div class="field" style="justify-content: flex-end">
+        <button class="btn btn-outline" type="submit">Buscar</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              @if (hasParent) {
+                <th>{{ parentLabel }}</th>
+              }
+              <th>Estado</th>
+              @if (isAdmin) {
+                <th></th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.id) {
+              <tr>
+                <td>
+                  @if (editing?.id === item.id) {
+                    <div class="actions">
+                      <input name="edit-{{ item.id }}" [(ngModel)]="editing!.name" style="max-width: 260px" />
+                      <button class="btn btn-primary btn-sm" type="button" (click)="saveEdit()">Guardar</button>
+                      <button class="btn btn-outline btn-sm" type="button" (click)="editing = null">Cancelar</button>
+                    </div>
+                  } @else {
+                    {{ item.name }}
+                  }
+                </td>
+                @if (hasParent) {
+                  <td>{{ item.campus_name || item.category_name }}</td>
+                }
+                <td>
+                  <span class="badge" [class.badge-ok]="item.is_active" [class.badge-danger]="!item.is_active">
+                    {{ item.is_active ? 'ACTIVO' : 'INACTIVO' }}
+                  </span>
+                  @if (!item.is_active && item.inactivation_reason) {
+                    <div class="muted">{{ item.inactivation_reason }}</div>
+                  }
+                </td>
+                @if (isAdmin) {
+                  <td>
+                    <div class="actions">
+                      @if (item.is_active) {
+                        <button class="btn btn-outline btn-sm" type="button" (click)="editing = { id: item.id, name: item.name }">Editar</button>
+                      }
+                      <button class="btn btn-outline btn-sm" type="button" (click)="openDialog(item)">
+                        {{ item.is_active ? 'Inactivar' : 'Reactivar' }}
+                      </button>
+                    </div>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>
+
+@if (dialogItem(); as item) {
+  <app-reason-dialog
+    [title]="(item.is_active ? 'Inactivar ' : 'Reactivar ') + item.name"
+    description="No se puede inactivar si hay registros activos que dependen de este catálogo; el sistema le dirá cuáles."
+    [confirmLabel]="item.is_active ? 'Inactivar' : 'Reactivar'"
+    [danger]="item.is_active"
+    [busy]="dialogBusy()"
+    [errorText]="dialogError()"
+    (confirmed)="toggleActive($event)"
+    (cancelled)="dialogItem.set(null)"
+  />
+}

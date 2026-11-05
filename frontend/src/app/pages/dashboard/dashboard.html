@@ -1,0 +1,122 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Dashboard</h1>
+      <p class="muted">Indicadores calculados en la base de datos. Seleccione uno para ver el listado.</p>
+    </div>
+  </div>
+
+  <form class="card filters" (ngSubmit)="load()">
+    <div class="field">
+      <label for="d-from">Recibidos desde</label>
+      <input id="d-from" type="date" name="dateFrom" [(ngModel)]="dateFrom" />
+    </div>
+    <div class="field">
+      <label for="d-to">Hasta</label>
+      <input id="d-to" type="date" name="dateTo" [(ngModel)]="dateTo" />
+    </div>
+    <div class="field">
+      <label for="d-campus">Sede</label>
+      <select id="d-campus" name="campusId" [(ngModel)]="campusId">
+        <option [ngValue]="null">Todas</option>
+        @for (campus of campuses(); track campus.id) {
+          <option [ngValue]="campus.id">{{ campus.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">Aplicar</button>
+      <button class="btn btn-outline" type="button" (click)="clear()">Limpiar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+  @if (loading()) {
+    <div class="loading">Calculando indicadores...</div>
+  }
+
+  @if (summary(); as s) {
+    <div class="kpis">
+      <button class="kpi" type="button" (click)="open('total')">
+        <span class="kpi-value">{{ s.total }}</span><span class="kpi-label">Registrados</span>
+      </button>
+      <button class="kpi ok" type="button" (click)="open('available')">
+        <span class="kpi-value">{{ s.available }}</span><span class="kpi-label">Disponibles</span>
+      </button>
+      <button class="kpi info" type="button" (click)="open('returned')">
+        <span class="kpi-value">{{ s.returned }}</span><span class="kpi-label">Devueltos</span>
+      </button>
+      <button class="kpi muted-kpi" type="button" (click)="open('inactive')">
+        <span class="kpi-value">{{ s.inactive }}</span><span class="kpi-label">Inactivos</span>
+      </button>
+      <button class="kpi warn" type="button" (click)="open('pending')">
+        <span class="kpi-value">{{ s.pending_claims }}</span><span class="kpi-label">Reclamaciones pendientes</span>
+      </button>
+    </div>
+  }
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h2>Objetos por categoría</h2>
+      @for (bar of byCategory(); track bar.id) {
+        <button class="bar-row" type="button" (click)="openCategory(bar.id)">
+          <span class="bar-label">{{ bar.label }}</span>
+          <span class="bar-track"><span class="bar-fill" [style.width.%]="bar.percent"></span></span>
+          <span class="bar-total">{{ bar.total }}</span>
+        </button>
+      } @empty {
+        <p class="muted">Sin datos para los filtros.</p>
+      }
+    </div>
+    <div class="card">
+      <h2>Objetos por sede</h2>
+      @for (bar of byCampus(); track bar.id) {
+        <button class="bar-row" type="button" (click)="openCampus(bar.id)">
+          <span class="bar-label">{{ bar.label }}</span>
+          <span class="bar-track"><span class="bar-fill campus" [style.width.%]="bar.percent"></span></span>
+          <span class="bar-total">{{ bar.total }}</span>
+        </button>
+      } @empty {
+        <p class="muted">Sin datos para los filtros.</p>
+      }
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Últimos objetos recibidos</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Tipo</th>
+            <th>Sede</th>
+            <th>Recibido</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of recent(); track item.id) {
+            <tr class="clickable" [routerLink]="['/objetos', item.id]">
+              <td>{{ item.code }}</td>
+              <td>{{ item.object_type.name }}</td>
+              <td>{{ item.found_campus?.name }}</td>
+              <td>{{ item.received_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</td>
+              <td>
+                @if (item.is_active === false) {
+                  <span class="badge">INACTIVO</span>
+                } @else {
+                  <span class="badge" [class.badge-ok]="item.status === 'DISPONIBLE'" [class.badge-info]="item.status === 'DEVUELTO'">{{ item.status }}</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="5" class="muted">No hay objetos en el rango seleccionado.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

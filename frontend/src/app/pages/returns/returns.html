@@ -1,0 +1,56 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Devoluciones</h1>
+      <p class="muted">Histórico de solo lectura. Cada objeto se devuelve una sola vez.</p>
+    </div>
+  </div>
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="r-from">Devueltos desde</label>
+        <input id="r-from" type="date" name="from" [(ngModel)]="filters.date_from" />
+      </div>
+      <div class="field">
+        <label for="r-to">Hasta</label>
+        <input id="r-to" type="date" name="to" [(ngModel)]="filters.date_to" />
+      </div>
+    </div>
+    <div class="actions" style="margin-top: 12px">
+      <button class="btn btn-primary" type="submit">Buscar</button>
+    </div>
+  </form>
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Constancia</th><th>Objeto</th><th>Entrega (operador)</th><th>Recibe (propietario)</th><th>Fecha</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (record of items(); track record.id) {
+              <tr>
+                <td>{{ record.receipt_reference }}</td>
+                <td><a [routerLink]="['/objetos', record.object_lost.id]">{{ record.object_lost.code }}</a></td>
+                <td>{{ record.delivered_by.name }}</td>
+                <td>{{ record.owner.full_name }}<div class="muted">{{ record.owner.identification }}</div></td>
+                <td>{{ record.returned_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</td>
+                <td><button class="btn btn-outline btn-sm" type="button" (click)="download(record)">PDF</button></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>

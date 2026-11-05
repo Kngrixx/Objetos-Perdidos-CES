@@ -1,0 +1,175 @@
+{
+  "fecha": "2026-11-04T02:24:59.623Z",
+  "results": [
+    {
+      "name": "Login con contraseña errónea muestra el mensaje del backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ADMIN entra al dashboard",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Dashboard muestra 5 indicadores",
+      "ok": true,
+      "detail": "[24,17,5,2,2]"
+    },
+    {
+      "name": "Total = disponibles + devueltos + inactivos",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Indicador «Disponibles» abre el listado filtrado",
+      "ok": true,
+      "detail": "17 filas"
+    },
+    {
+      "name": "El tipo creado en el modal queda seleccionado",
+      "ok": true,
+      "detail": "Lector de huella E2E 88088"
+    },
+    {
+      "name": "Vista previa de 3 fotos",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Retirar una foto antes de guardar",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Recepción guardada: detalle con código OBJ-",
+      "ok": true,
+      "detail": "OBJ-000025 · Lector de huella E2E 88088"
+    },
+    {
+      "name": "Detalle muestra 2 fotos autorizadas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Detalle muestra quién entrega y quién recibe",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Edición sin motivo es rechazada en el formulario",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Historial muestra la edición con antes/después",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Foto inactivada con motivo (se conserva visible como inactiva)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Objeto queda DEVUELTO con constancia y responsables",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Constancia PDF descargada",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Inventario exporta PDF con filtros",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ADMIN crea una sede desde catálogos",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Duplicado normalizado muestra 409 del backend",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ADMIN ve la administración de usuarios",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "ADMIN ve la auditoría",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "OPERADOR entra a Objetos (sin dashboard)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Menú de OPERADOR sin Dashboard, Usuarios ni Auditoría",
+      "ok": true,
+      "detail": "Objetos, Recepción, Inventario, Reclamaciones, Devoluciones, Personas, Catálogos, Mi cuenta"
+    },
+    {
+      "name": "OPERADOR no puede abrir /dashboard (redirige)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "OPERADOR no ve «Corrección administrativa» en un DEVUELTO",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "CONSULTA no ve columna de fotos ni bloque",
+      "ok": true,
+      "detail": "Código, Tipo, Categoría, Sede, Recibido, Estado"
+    },
+    {
+      "name": "Menú de CONSULTA solo Objetos y Mi cuenta",
+      "ok": true,
+      "detail": "Objetos, Mi cuenta"
+    },
+    {
+      "name": "Detalle de CONSULTA sin descripción ni personas",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "CONSULTA no puede abrir /usuarios",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Dashboard usable en móvil (sin scroll horizontal)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Registro valida la contraseña en el formulario",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Registro exitoso vuelve al login con mensaje",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Olvidé contraseña muestra el mensaje genérico",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sin errores de consola en el navegador",
+      "ok": true,
+      "detail": "Failed to load resource: the server responded with a status of 401 (UNAUTHORIZED) | Failed to load resource: the server responded with a status of 409 (CONFLICT)"
+    }
+  ]
+}

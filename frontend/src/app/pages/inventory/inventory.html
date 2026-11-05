@@ -1,0 +1,129 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Inventario</h1>
+      <p class="muted">Objetos con registro activo y estado DISPONIBLE. Los devueltos e inactivos no aparecen aquí.</p>
+    </div>
+    <button class="btn btn-primary" type="button" (click)="exportPdf()" [disabled]="exporting()">
+      {{ exporting() ? 'Generando...' : 'Exportar PDF' }}
+    </button>
+  </div>
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="i-text">Texto</label>
+        <input id="i-text" name="text" [(ngModel)]="filters.text" />
+      </div>
+      <div class="field">
+        <label for="i-campus">Sede</label>
+        <select id="i-campus" name="campus" [(ngModel)]="filters.campus_id" (ngModelChange)="onCampusChange()">
+          <option [ngValue]="null">Todas</option>
+          @for (campus of campuses(); track campus.id) {
+            <option [ngValue]="campus.id">{{ campus.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="i-block">Bloque</label>
+        <select id="i-block" name="block" [(ngModel)]="filters.block_id" [disabled]="!filters.campus_id">
+          <option [ngValue]="null">Todos</option>
+          @for (block of blocks(); track block.id) {
+            <option [ngValue]="block.id">{{ block.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="i-category">Categoría</label>
+        <select id="i-category" name="category" [(ngModel)]="filters.category_id" (ngModelChange)="onCategoryChange()">
+          <option [ngValue]="null">Todas</option>
+          @for (category of categories(); track category.id) {
+            <option [ngValue]="category.id">{{ category.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="i-type">Tipo</label>
+        <select id="i-type" name="type" [(ngModel)]="filters.object_type_id" [disabled]="!filters.category_id">
+          <option [ngValue]="null">Todos</option>
+          @for (type of types(); track type.id) {
+            <option [ngValue]="type.id">{{ type.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="i-from">Recibido desde</label>
+        <input id="i-from" type="date" name="from" [(ngModel)]="filters.date_from" />
+      </div>
+      <div class="field">
+        <label for="i-to">Hasta (inclusive)</label>
+        <input id="i-to" type="date" name="to" [(ngModel)]="filters.date_to" />
+      </div>
+    </div>
+    <div class="actions" style="margin-top: 12px">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">Filtrar</button>
+      <button class="btn btn-outline" type="button" (click)="clear()">Limpiar</button>
+    </div>
+  </form>
+
+  @if (summary(); as s) {
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>Disponibles</h3>
+        <div class="big">{{ s.total_available }}</div>
+        @for (status of s.by_status; track status.status) {
+          <div class="muted">{{ status.status }}: {{ status.total }}</div>
+        }
+      </div>
+      <div class="card">
+        <h3>Por sede</h3>
+        @for (row of s.by_campus; track row.id) {
+          <div class="row-count"><span>{{ row.name }}</span><strong>{{ row.total }}</strong></div>
+        } @empty {
+          <p class="muted">Sin datos.</p>
+        }
+      </div>
+      <div class="card">
+        <h3>Tipos más frecuentes</h3>
+        @for (row of topTypes(); track row.id) {
+          <div class="row-count"><span>{{ row.name }}</span><strong>{{ row.total }}</strong></div>
+        } @empty {
+          <p class="muted">Sin datos.</p>
+        }
+      </div>
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Foto</th><th>Código</th><th>Tipo</th><th>Sede / bloque</th><th>Custodia</th><th>Recibido</th></tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.id) {
+              <tr class="clickable" (click)="open(item)">
+                <td><app-secure-image [photoId]="item.cover_photo_id" /></td>
+                <td><strong>{{ item.code }}</strong></td>
+                <td>{{ item.object_type.name }}<div class="muted">{{ item.category.name }}</div></td>
+                <td>{{ item.found_campus?.name }} · {{ item.found_block?.name }}</td>
+                <td>{{ item.custody_block?.name }} · {{ item.custody_location }}</td>
+                <td>{{ item.received_at | date: 'yyyy-MM-dd HH:mm' : '-0500' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>

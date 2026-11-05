@@ -1,0 +1,110 @@
+erDiagram
+    roles ||--o{ users : "tiene"
+    users ||--o{ password_reset_tokens : "solicita"
+    users ||--o{ token_revocations : "cierra sesión"
+    campuses ||--o{ blocks : "tiene"
+    object_categories ||--o{ object_types : "agrupa"
+    departments |o--o{ persons : "vincula"
+    object_types ||--o{ object_lost : "clasifica"
+    blocks ||--o{ object_lost : "hallazgo (found_block_id)"
+    blocks ||--o{ object_lost : "custodia (custody_block_id)"
+    persons ||--o{ object_lost : "entrega (finder_person_id)"
+    departments |o--o{ object_lost : "dependencia declarada"
+    users ||--o{ object_lost : "recibe (received_by_user_id)"
+    object_lost ||--o{ object_photos : "tiene 1 a 5 activas"
+    object_lost ||--o{ claims : "recibe"
+    persons ||--o{ claims : "reclama"
+    object_lost ||--o| return_records : "se devuelve 0..1"
+    claims ||--o| return_records : "origina 0..1"
+    persons ||--o{ return_records : "propietario"
+    users ||--o{ return_records : "entrega"
+    users |o--o{ audit_logs : "actor"
+
+    roles { int id PK
+        string name UK }
+    users { int id PK
+        string identification UK
+        string full_name
+        string email UK
+        string password_hash
+        int role_id FK
+        bool is_active
+        int token_version }
+    password_reset_tokens { int id PK
+        int user_id FK
+        string token_hash UK
+        datetime expires_at
+        datetime used_at
+        datetime revoked_at }
+    token_revocations { int id PK
+        string jti UK
+        int user_id FK
+        datetime expires_at }
+    campuses { int id PK
+        string name
+        string normalized_name UK
+        bool is_active }
+    blocks { int id PK
+        int campus_id FK
+        string name
+        string normalized_name "UK con campus_id"
+        bool is_active }
+    departments { int id PK
+        string name
+        string normalized_name UK
+        bool is_active }
+    object_categories { int id PK
+        string name
+        string normalized_name UK
+        bool is_active }
+    object_types { int id PK
+        int category_id FK
+        string name
+        string normalized_name "UK con category_id"
+        bool is_active }
+    persons { int id PK
+        string identification UK
+        string full_name
+        string affiliation_type
+        int department_id FK
+        bool is_active }
+    object_lost { int id PK
+        string code UK
+        int object_type_id FK
+        text description
+        int found_block_id FK
+        datetime found_at
+        int custody_block_id FK
+        int finder_person_id FK
+        int received_by_user_id FK
+        datetime received_at
+        string status "DISPONIBLE o DEVUELTO"
+        bool is_active
+        int version }
+    object_photos { int id PK
+        int object_lost_id FK
+        string storage_key UK
+        string mime_type
+        int size_bytes
+        bool is_active }
+    claims { int id PK
+        int object_lost_id FK
+        int claimant_person_id FK
+        text evidence
+        string status "PENDIENTE ACEPTADA RECHAZADA"
+        int reviewed_by FK
+        bool is_active }
+    return_records { int id PK
+        int object_lost_id "FK UK"
+        int claim_id "FK UK"
+        int owner_person_id FK
+        int delivered_by_user_id FK
+        datetime returned_at
+        string receipt_reference UK }
+    audit_logs { int id PK
+        string entity
+        int entity_id
+        string action
+        int actor_user_id FK
+        json before_data
+        json after_data }

@@ -1,0 +1,112 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Usuarios</h1>
+      <p class="muted">El registro público crea cuentas CONSULTA. Aquí un ADMIN promueve a OPERADOR o cambia el estado.</p>
+    </div>
+  </div>
+
+  @if (success()) {
+    <div class="alert alert-success">{{ success() }}</div>
+  }
+  @if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+  }
+
+  <form class="card" (ngSubmit)="search()">
+    <div class="form-grid">
+      <div class="field">
+        <label for="u-text">Nombre, correo o identificación</label>
+        <input id="u-text" name="text" [(ngModel)]="filters.text" />
+      </div>
+      <div class="field">
+        <label for="u-role">Rol</label>
+        <select id="u-role" name="role" [(ngModel)]="filters.role">
+          <option value="">Todos</option>
+          @for (role of roles(); track role.id) {
+            <option [value]="role.name">{{ role.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label for="u-active">Estado</label>
+        <select id="u-active" name="active" [(ngModel)]="filters.is_active">
+          <option value="all">Todos</option>
+          <option value="true">Activos</option>
+          <option value="false">Inactivos</option>
+        </select>
+      </div>
+      <div class="field" style="justify-content: flex-end">
+        <button class="btn btn-outline" type="submit">Buscar</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="card">
+    @if (loading()) {
+      <div class="loading">Consultando...</div>
+    } @else if (items().length === 0) {
+      <div class="alert alert-info">{{ message() || 'No se encontraron resultados.' }}</div>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Nombre</th><th>Correo</th><th>Identificación</th><th>Rol</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (user of items(); track user.id) {
+              <tr>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.identification }}</td>
+                <td>
+                  <div class="actions">
+                    <select name="role-{{ user.id }}" [(ngModel)]="roleChanges[user.id]" style="width: auto">
+                      @for (role of roles(); track role.id) {
+                        <option [ngValue]="role.id">{{ role.name }}</option>
+                      }
+                    </select>
+                    @if (roleChanges[user.id] !== user.role_id) {
+                      <button class="btn btn-primary btn-sm" type="button" (click)="saveRole(user)">Guardar</button>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="badge" [class.badge-ok]="user.is_active" [class.badge-danger]="!user.is_active">
+                    {{ user.is_active ? 'ACTIVO' : 'INACTIVO' }}
+                  </span>
+                  @if (!user.is_active && user.inactivation_reason) {
+                    <div class="muted">{{ user.inactivation_reason }}</div>
+                  }
+                </td>
+                <td>
+                  @if (user.id !== myId) {
+                    <button class="btn btn-outline btn-sm" type="button" (click)="openDialog(user)">
+                      {{ user.is_active ? 'Inactivar' : 'Reactivar' }}
+                    </button>
+                  } @else {
+                    <span class="muted">(usted)</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pager [page]="page" [pageSize]="pageSize" [total]="total()" (pageChange)="search($event)" />
+    }
+  </div>
+</div>
+
+@if (dialogUser(); as user) {
+  <app-reason-dialog
+    [title]="(user.is_active ? 'Inactivar a ' : 'Reactivar a ') + user.full_name"
+    description="Al inactivar se cierran todas sus sesiones. No se puede inactivar al último ADMIN activo."
+    [confirmLabel]="user.is_active ? 'Inactivar' : 'Reactivar'"
+    [danger]="user.is_active"
+    [busy]="dialogBusy()"
+    [errorText]="dialogError()"
+    (confirmed)="toggleActive($event)"
+    (cancelled)="dialogUser.set(null)"
+  />
+}

@@ -1,0 +1,33 @@
+<div class="modal-backdrop">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h2>Crear tipo de objeto</h2>
+    <p class="muted">
+      Antes de crear se busca un tipo igual sin importar mayúsculas, espacios ni tildes.
+    </p>
+    <div class="field">
+      <label for="type-category">Categoría</label>
+      <select id="type-category" name="category" [(ngModel)]="selectedCategory">
+        <option [ngValue]="null">Seleccione...</option>
+        @for (category of categories; track category.id) {
+          <option [ngValue]="category.id">{{ category.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="field" style="margin-top: 10px">
+      <label for="type-name">Nombre del tipo</label>
+      <input id="type-name" name="name" [(ngModel)]="name" maxlength="100" placeholder="Ej.: Lector de huella" />
+    </div>
+    @if (error()) {
+      <div class="alert alert-error">{{ error() }}</div>
+    }
+    <div class="actions" style="justify-content: flex-end; margin-top: 12px">
+      <button class="btn btn-outline" type="button" (click)="closed.emit()" [disabled]="saving()">Cancelar</button>
+      @if (existingId()) {
+        <button class="btn btn-success" type="button" (click)="useExisting()">Usar el existente</button>
+      }
+      <button class="btn btn-primary" type="button" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Guardando...' : 'Guardar y seleccionar' }}
+      </button>
+    </div>
+  </div>
+</div>
